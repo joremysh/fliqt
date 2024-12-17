@@ -14,7 +14,7 @@ import (
 )
 
 type DayOffService interface {
-	SubmitDayOff(ctx context.Context, record *model.DayOffRecord) error
+	SubmitDayOff(ctx context.Context, record *model.DayOffRecord) (*model.DayOffRecord, error)
 	ListDayOffs(ctx context.Context, employeeID uint, params *model.ListParams) (*PaginatedResult[model.DayOffRecord], error)
 	CancelDayOff(ctx context.Context, id uint, cancellationReason string) error
 }
@@ -31,28 +31,31 @@ func NewDayOffService(repo repository.DayOff, employeeRepo repository.Employee) 
 	}
 }
 
-func (s *dayOffService) SubmitDayOff(ctx context.Context, record *model.DayOffRecord) error {
+func (s *dayOffService) SubmitDayOff(ctx context.Context, record *model.DayOffRecord) (*model.DayOffRecord, error) {
 	_, err := s.employeeRepo.GetByID(record.EmployeeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("employee not found by id: %d", record.EmployeeID)
+			return nil, fmt.Errorf("employee not found by id: %d", record.EmployeeID)
 		}
-		return err
+		return nil, err
 	}
 
 	if err := s.validateDayOff(record); err != nil {
-		return err
+		return nil, err
 	}
 
 	exists, err := s.repo.ExistsOverlapping(record.EmployeeID, record.StartTime, record.EndTime)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if exists {
-		return ErrOverlappingDayOff
+		return nil, ErrOverlappingDayOff
 	}
 
-	return s.repo.Create(record)
+	if err = s.repo.Create(record); err != nil {
+		return nil, err
+	}
+	return s.repo.GetByID(record.ID)
 }
 
 func (s *dayOffService) ListDayOffs(ctx context.Context, employeeID uint, params *model.ListParams) (*PaginatedResult[model.DayOffRecord], error) {

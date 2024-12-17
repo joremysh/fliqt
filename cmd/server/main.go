@@ -12,6 +12,7 @@ import (
 	middleware "github.com/oapi-codegen/gin-middleware"
 
 	"github.com/joremysh/fliqt/api"
+	"github.com/joremysh/fliqt/internal/repository"
 	"github.com/joremysh/fliqt/pkg/database"
 )
 
@@ -58,13 +59,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	// err = repository.Migrate(gdb)
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
+	err = repository.Migrate(gdb)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	// Create an instance of our handler which satisfies the generated interface
-	petStore := api.NewHRSystem(gdb)
-	s := NewServer(petStore, port)
+	hrSystem := api.NewHRSystem(gdb)
+	s := NewServer(hrSystem, port)
 	// And we serve HTTP until the world ends.
 	log.Fatal(s.ListenAndServe())
 }

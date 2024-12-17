@@ -20,22 +20,22 @@ type DayOff interface {
 }
 
 type dayOffRepo struct {
-	db *gorm.DB
+	gdb *gorm.DB
 }
 
-func NewDayOffRepo(db *gorm.DB) DayOff {
+func NewDayOffRepo(gdb *gorm.DB) DayOff {
 	return &dayOffRepo{
-		db: db,
+		gdb: gdb,
 	}
 }
 
 func (r *dayOffRepo) Create(record *model.DayOffRecord) error {
-	return r.db.Create(record).Error
+	return r.gdb.Create(record).Error
 }
 
 func (r *dayOffRepo) GetByID(id uint) (*model.DayOffRecord, error) {
 	var record model.DayOffRecord
-	err := r.db.Preload("Employee").First(&record, id).Error
+	err := r.gdb.Preload("Employee").First(&record, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +43,14 @@ func (r *dayOffRepo) GetByID(id uint) (*model.DayOffRecord, error) {
 }
 
 func (r *dayOffRepo) Update(record *model.DayOffRecord) error {
-	return r.db.Save(record).Error
+	return r.gdb.Save(record).Error
 }
 
 func (r *dayOffRepo) List(params *model.ListParams) ([]model.DayOffRecord, int64, error) {
 	var records []model.DayOffRecord
 	var totalCount int64
-	query := r.db.Model(&model.DayOffRecord{})
-	countQuery := r.db.Model(&model.DayOffRecord{})
+	query := r.gdb.Model(&model.DayOffRecord{})
+	countQuery := r.gdb.Model(&model.DayOffRecord{})
 
 	var listFilterColumnNames = map[string]string{"DayOffType": "day_off_type"}
 	// Apply filters
@@ -91,7 +91,7 @@ func (r *dayOffRepo) List(params *model.ListParams) ([]model.DayOffRecord, int64
 func (r *dayOffRepo) ExistsOverlapping(employeeID uint, startTime, endTime time.Time) (bool, error) {
 	var count int64
 
-	err := r.db.Model(&model.DayOffRecord{}).
+	err := r.gdb.Model(&model.DayOffRecord{}).
 		Where("employee_id = ?", employeeID).
 		Where("deleted_at IS NULL"). // Exclude cancelled records
 		Where(

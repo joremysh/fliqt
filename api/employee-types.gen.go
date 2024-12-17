@@ -103,6 +103,20 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+// ListDayOffsResponse defines model for ListDayOffsResponse.
+type ListDayOffsResponse struct {
+	Data []DayOffRecord `json:"data"`
+
+	// Page Current page number
+	Page int `json:"page"`
+
+	// PageSize Number of items per page
+	PageSize int `json:"pageSize"`
+
+	// TotalCount Total number of records
+	TotalCount int64 `json:"totalCount"`
+}
+
 // ListEmployeesResponse defines model for ListEmployeesResponse.
 type ListEmployeesResponse struct {
 	Data []Employee `json:"data"`

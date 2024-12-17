@@ -267,19 +267,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/DayOffRecord'
-                  totalCount:
-                    type: integer
-                    format: int64
-                  page:
-                    type: integer
-                  pageSize:
-                    type: integer
+                $ref: '#/components/schemas/ListDayOffsResponse'
         default:
           description: unexpected error
           content:
@@ -426,6 +414,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Employee'
+        totalCount:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Total number of records
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+        pageSize:
+          type: integer
+          minimum: 1
+          description: Number of items per page
+
+    ListDayOffsResponse:
+      type: object
+      required:
+        - data
+        - totalCount
+        - page
+        - pageSize
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayOffRecord'
         totalCount:
           type: integer
           format: int64
