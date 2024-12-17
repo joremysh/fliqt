@@ -1,0 +1,441 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: HR Systems
+  description: A series of APIs for HR Systems
+servers:
+  - url: http://localhost:8081
+paths:
+  /liveness:
+    get:
+      responses:
+        "200":
+          description: liveness response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pong"
+  /employees:
+    get:
+      summary: List employees
+      description: Retrieve a paginated list of employees with filtering and sorting options
+      operationId: listEmployees
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [name, email, department, onboardDate]
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - name: filters
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+          description: Key-value pairs for filtering records (e.g., filters[department]=Engineering&filters[name]=John)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEmployeesResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Creates a new employee
+      description: Creates a new employee in the system. Duplicated names are allowed
+      operationId: addEmployee
+      requestBody:
+        description: employee to add to the system
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewEmployee'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /employees/{id}:
+    get:
+      summary: Returns a employee by ID
+      description: Returns a employee based on a single ID
+      operationId: findEmployeeByID
+      parameters:
+        - name: id
+          in: path
+          description: ID of employee
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Updates a employee
+      description: Updates a new employee in the system.
+      operationId: updateEmployee
+      parameters:
+        - name: id
+          in: path
+          description: ID of employee
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        description: employee to update in the system
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewEmployee'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Deletes a employee by ID
+      description: deletes a single employee based on the ID supplied
+      operationId: deleteEmployee
+      parameters:
+        - name: id
+          in: path
+          description: ID of employee to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: deleted
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /employees/{id}/day-offs:
+    post:
+      summary: Submit a day off request
+      operationId: submitDayOff
+      parameters:
+        - name: id
+          in: path
+          description: ID of employee
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DayOffRecord'
+      responses:
+        '201':
+          description: Day off request submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayOffRecord'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      summary: List day off records
+      operationId: listDayOffs
+      parameters:
+        - name: id
+          in: path
+          description: ID of employee
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [startTime, dayOffType]
+            default: startTime
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: startTimeFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: startTimeTo
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: filters
+          in: query
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+          description: Key-value pairs for filtering records (e.g., filters[dayOffType]=PTO)
+      responses:
+        '200':
+          description: List of day off records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DayOffRecord'
+                  totalCount:
+                    type: integer
+                    format: int64
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /employees/day-offs/{id}/cancel:
+    post:
+      summary: Cancel a day off request
+      operationId: cancelDayOff
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cancellationReason
+              properties:
+                cancellationReason:
+                  type: string
+      responses:
+        '200':
+          description: Day off request cancelled successfully
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Pong:
+      type: object
+      required:
+        - startTime
+      properties:
+        startTime:
+          type: string
+
+    Employee:
+      allOf:
+        - $ref: '#/components/schemas/NewEmployee'
+        - required:
+            - id
+          properties:
+            id:
+              type: integer
+              format: int64
+              minimum: 1
+              description: Unique id of the employee
+
+    NewEmployee:
+      required:
+        - name
+        - email
+        - phoneNumber
+        - address
+        - salary
+        - onboardDate
+        - department
+      properties:
+        name:
+          type: string
+          description: Name of the employee
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        address:
+          type: string
+        salary:
+          type: integer
+          minimum: 0
+        onboardDate:
+          type: string
+          format: date
+        department:
+          type: string
+          enum: [Sales, Financial, Design, Engineering, General affairs]
+
+    DayOffRecord:
+      type: object
+      required:
+        - employeeID
+        - dayOffType
+        - reason
+        - startTime
+        - endTime
+      properties:
+        employeeID:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Unique id of the employee
+        dayOffType:
+          type: string
+          enum:
+            - PTO
+            - sick leave
+            - parental leave
+            - bereavement
+        reason:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: Error code
+        message:
+          type: string
+          description: Error message
+
+    ListEmployeesResponse:
+      type: object
+      required:
+        - data
+        - totalCount
+        - page
+        - pageSize
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+        totalCount:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Total number of records
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+        pageSize:
+          type: integer
+          minimum: 1
+          description: Number of items per page

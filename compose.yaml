@@ -1,0 +1,45 @@
+services:
+  app:
+    container_name: server
+    build: .
+    image: server
+    ports:
+      - 8080:8080
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=hrs
+      - DSN=user:password@tcp(mysql:3306)/hrs?collation=utf8_unicode_ci&parseTime=true&loc=Asia%2FTaipei&multiStatements=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - go-network
+
+  mysql:
+    container_name: mysql
+    image: mysql:9.0
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=hrs
+    # volumes:
+    #   - dbdata:/var/lib/mysql
+    networks:
+      - go-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+# volumes:
+#   dbdata:
+
+networks:
+  go-network:
+    driver: bridge
