@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -18,7 +19,7 @@ import (
 	"github.com/joremysh/fliqt/pkg/database"
 )
 
-func NewServer(petStore *handler.HRSystem, port string) *http.Server {
+func NewServer(hrSystem *handler.HRSystem, port string) *http.Server {
 	swagger, err := api.GetSwagger()
 
 	if err != nil {
@@ -29,16 +30,13 @@ func NewServer(petStore *handler.HRSystem, port string) *http.Server {
 	// Clear out the servers array in the swagger spec, that skips validating
 	// that server names match. We don't know how this thing will be run.
 	swagger.Servers = nil
-
-	// This is how you set up a basic gin router
 	r := gin.Default()
 
 	// Use our validation middleware to check all requests against the
 	// OpenAPI schema.
 	r.Use(middleware.OapiRequestValidator(swagger))
 
-	// We now register our petStore above as the handler for the interface
-	api.RegisterHandlers(r, petStore)
+	api.RegisterHandlers(r, hrSystem)
 
 	s := &http.Server{
 		Handler: r,
@@ -65,11 +63,12 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	redisClient, err := cache.NewRedisClient(redisHost + ":" + redisPort)
+	redisClient, err := cache.NewRedisClient(net.JoinHostPort(redisHost, redisPort))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
+	handler.StartUp = time.Now().Format(time.RFC3339)
 	hrSystem := handler.NewHRSystem(gdb, redisClient)
 	s := NewServer(hrSystem, port)
 

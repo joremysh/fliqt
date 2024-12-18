@@ -44,7 +44,7 @@ func TestEmployeeRepo_Create(t *testing.T) {
 		tx.Rollback()
 	})
 
-	repo := NewEmployeeRepo(gdb)
+	repo := NewEmployeeRepo(tx)
 	employee := MockEmployee()
 	err = repo.Create(employee)
 	require.NoError(t, err)
@@ -63,7 +63,7 @@ func TestEmployeeRepo_GetByID(t *testing.T) {
 		tx.Rollback()
 	})
 
-	repo := NewEmployeeRepo(gdb)
+	repo := NewEmployeeRepo(tx)
 	employee := MockEmployee()
 	err = repo.Create(employee)
 	require.NoError(t, err)
@@ -82,7 +82,7 @@ func TestEmployeeRepo_Update(t *testing.T) {
 		tx.Rollback()
 	})
 
-	repo := NewEmployeeRepo(gdb)
+	repo := NewEmployeeRepo(tx)
 	employee := MockEmployee()
 	err = repo.Create(employee)
 	require.NoError(t, err)

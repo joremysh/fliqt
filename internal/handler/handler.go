@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	openapitypes "github.com/oapi-codegen/runtime/types"
@@ -16,6 +15,7 @@ import (
 )
 
 var _ api.ServerInterface = (*HRSystem)(nil)
+var StartUp string
 
 type HRSystem struct {
 	gdb             *gorm.DB
@@ -36,7 +36,7 @@ func NewHRSystem(gdb *gorm.DB, redisClient *cache.RedisClient) *HRSystem {
 
 func (s *HRSystem) GetLiveness(c *gin.Context) {
 	c.JSON(http.StatusOK, api.Pong{
-		StartTime: time.Now().Format(time.RFC3339),
+		StartTime: StartUp,
 	})
 }
 
@@ -105,7 +105,7 @@ func parseListParams(params api.ListEmployeesParams) *model.ListParams {
 
 func sendErrorResponse(c *gin.Context, code int, errMsg string) {
 	c.JSON(code, api.Error{
-		Code:    int32(code),
+		Code:    code,
 		Message: errMsg,
 	})
 }

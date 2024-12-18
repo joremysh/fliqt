@@ -34,7 +34,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	repo = repository.NewEmployeeRepo(gdb)
 	client, _ = redismock.NewClientMock()
 
 	m.Run()
@@ -50,6 +49,7 @@ func TestEmployeeService_CreateEmployee(t *testing.T) {
 	t.Cleanup(func() {
 		tx.Rollback()
 	})
+	repo = repository.NewEmployeeRepo(tx)
 
 	svc := NewEmployeeService(repo, &cache.RedisClient{Client: client})
 	employee := repository.MockEmployee()

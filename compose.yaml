@@ -7,7 +7,7 @@ services:
       - 8080:8080
     environment:
       - PORT=8080
-      - DSN=user:password@tcp(mysql:3306)/hrs?collation=utf8_unicode_ci&parseTime=true&multiStatements=true
+      - DSN=user:password@tcp(mysql:3306)/hrs?parseTime=true&multiStatements=true
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     depends_on:
