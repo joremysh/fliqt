@@ -15,7 +15,7 @@ type Seed struct {
 func All() []Seed {
 	seeds := make([]Seed, 10)
 	for i := 0; i < len(seeds); i++ {
-		employee := mockEmployee()
+		employee := MockEmployee()
 		seeds[i].Name = employee.Name
 		seeds[i].Run = func(gdb *gorm.DB) error {
 			repo := NewEmployeeRepo(gdb)
@@ -28,7 +28,7 @@ func All() []Seed {
 
 var departments = []string{"Sales", "Financial", "Design", "Engineering", "General affairs"}
 
-func mockEmployee() *model.Employee {
+func MockEmployee() *model.Employee {
 	return &model.Employee{
 		Name:        gofakeit.Name(),
 		Email:       gofakeit.Email(),

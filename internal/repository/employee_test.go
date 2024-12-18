@@ -1,33 +1,41 @@
 package repository
 
 import (
-	"flag"
 	"log"
-	"os"
 	"testing"
 
+	"github.com/brianvoe/gofakeit/v7"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
 	"github.com/joremysh/fliqt/internal/model"
-	"github.com/joremysh/fliqt/pkg/database"
+	testingx "github.com/joremysh/fliqt/pkg/testing"
 )
 
 var (
-	gdb *gorm.DB
-	err error
+	gdb      *gorm.DB
+	err      error
+	pool     *dockertest.Pool
+	resource *dockertest.Resource
 )
 
 func TestMain(m *testing.M) {
-	dsn := flag.String("dsn", "user:password@tcp(localhost:3306)/hrs?collation=utf8_unicode_ci&parseTime=true&loc=Asia%2FTaipei&multiStatements=true", "database connection string")
-	flag.Parse()
-
-	gdb, err = database.NewDatabase(*dsn)
+	pool, resource, gdb, err = testingx.NewMysqlInDocker()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = Migrate(gdb)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	os.Exit(m.Run())
+	m.Run()
+
+	err = pool.Purge(resource)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func TestEmployeeRepo_Create(t *testing.T) {
@@ -37,12 +45,10 @@ func TestEmployeeRepo_Create(t *testing.T) {
 	})
 
 	repo := NewEmployeeRepo(gdb)
-	employee := mockEmployee()
+	employee := MockEmployee()
 	err = repo.Create(employee)
 	require.NoError(t, err)
 	require.NotNil(t, employee.ID)
-	// jsonBytes, _ := json.Marshal(employee)
-	// t.Log(string(jsonBytes))
 
 	check := &model.Employee{}
 	err = gdb.First(check, &model.Employee{Email: employee.Email}).Error
@@ -58,11 +64,32 @@ func TestEmployeeRepo_GetByID(t *testing.T) {
 	})
 
 	repo := NewEmployeeRepo(gdb)
-	employee := mockEmployee()
+	employee := MockEmployee()
 	err = repo.Create(employee)
 	require.NoError(t, err)
 	require.NotNil(t, employee.ID)
 
+	check, err := repo.GetByID(employee.ID)
+	require.NoError(t, err)
+	require.Equal(t, employee.ID, check.ID)
+	require.Equal(t, employee.Name, check.Name)
+	require.Equal(t, employee.Email, check.Email)
+}
+
+func TestEmployeeRepo_Update(t *testing.T) {
+	tx := gdb.Begin()
+	t.Cleanup(func() {
+		tx.Rollback()
+	})
+
+	repo := NewEmployeeRepo(gdb)
+	employee := MockEmployee()
+	err = repo.Create(employee)
+	require.NoError(t, err)
+
+	employee.Name = gofakeit.Name()
+	err = repo.Update(employee)
+	require.NoError(t, err)
 	check, err := repo.GetByID(employee.ID)
 	require.NoError(t, err)
 	require.Equal(t, employee.ID, check.ID)

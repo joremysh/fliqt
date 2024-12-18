@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
@@ -14,9 +14,6 @@ FROM alpine:3.20
 WORKDIR /app
 
 COPY --from=builder /app/server .
-
-# Set the timezone and install CA certificates
-RUN apk --no-cache add ca-certificates tzdata
 
 EXPOSE 8080
 ENTRYPOINT ["/app/server"]

@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
 	"github.com/joremysh/fliqt/internal/model"
 	"github.com/joremysh/fliqt/internal/repository"
+	"github.com/joremysh/fliqt/pkg/cache"
 )
 
 type EmployeeService interface {
@@ -27,12 +29,14 @@ type PaginatedResult[T any] struct {
 }
 
 type employeeService struct {
-	repo repository.Employee
+	repo        repository.Employee
+	redisClient *cache.RedisClient
 }
 
-func NewEmployeeService(repo repository.Employee) EmployeeService {
+func NewEmployeeService(repo repository.Employee, redisClient *cache.RedisClient) EmployeeService {
 	return &employeeService{
-		repo: repo,
+		repo:        repo,
+		redisClient: redisClient,
 	}
 }
 
@@ -58,12 +62,24 @@ func (e employeeService) CreateEmployee(ctx context.Context, employee *model.Emp
 }
 
 func (e employeeService) GetEmployee(ctx context.Context, id uint) (*model.Employee, error) {
-	employee, err := e.repo.GetByID(id)
+	cacheKey := fmt.Sprintf("employee:%d", id)
+	var employee *model.Employee
+	err := e.redisClient.Get(ctx, cacheKey, employee)
+	if err == nil {
+		return employee, nil
+	}
+
+	employee, err = e.repo.GetByID(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("employee not found by id: %d", id)
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	err = e.redisClient.Set(ctx, cacheKey, employee, 1*time.Hour)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to cache employee: %s", err.Error())
 	}
 	return employee, nil
 }
@@ -95,7 +111,14 @@ func (e employeeService) UpdateEmployee(ctx context.Context, employee *model.Emp
 		return nil, err
 	}
 
-	return e.repo.GetByID(existed.ID)
+	updated, err := e.repo.GetByID(existed.ID)
+	if err != nil {
+		return nil, err
+	}
+	cacheKey := fmt.Sprintf("employee:%d", employee.ID)
+	_ = e.redisClient.Delete(ctx, cacheKey) // todo: make update in transaction and rollback if delete cache failed
+
+	return updated, nil
 }
 
 func (e employeeService) ListEmployees(ctx context.Context, params *model.ListParams) (*PaginatedResult[model.Employee], error) {

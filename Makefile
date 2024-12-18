@@ -3,3 +3,15 @@ dependencies:
 
 generate:
 	go generate ./...
+
+unit-test:
+	go test -v ./...
+
+lint:
+	golangci-lint run --timeout 60s
+
+up:
+	docker-compose up -d
+
+down:
+	docker-compose down

@@ -6,14 +6,14 @@ services:
     ports:
       - 8080:8080
     environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=hrs
-      - DSN=user:password@tcp(mysql:3306)/hrs?collation=utf8_unicode_ci&parseTime=true&loc=Asia%2FTaipei&multiStatements=true
+      - PORT=8080
+      - DSN=user:password@tcp(mysql:3306)/hrs?collation=utf8_unicode_ci&parseTime=true&multiStatements=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       mysql:
+        condition: service_healthy
+      cache:
         condition: service_healthy
     networks:
       - go-network
@@ -37,6 +37,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+  cache:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+    networks:
+      - go-network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    command: ["redis-server"]
+
 # volumes:
 #   dbdata:
 

@@ -12,11 +12,13 @@ import (
 	middleware "github.com/oapi-codegen/gin-middleware"
 
 	"github.com/joremysh/fliqt/api"
+	"github.com/joremysh/fliqt/internal/handler"
 	"github.com/joremysh/fliqt/internal/repository"
+	"github.com/joremysh/fliqt/pkg/cache"
 	"github.com/joremysh/fliqt/pkg/database"
 )
 
-func NewServer(petStore *api.HRSystem, port string) *http.Server {
+func NewServer(petStore *handler.HRSystem, port string) *http.Server {
 	swagger, err := api.GetSwagger()
 
 	if err != nil {
@@ -51,9 +53,8 @@ func main() {
 		port = "8080"
 	}
 	dsn := os.Getenv("DSN")
-	if dsn == "" {
-		dsn = "user:password@tcp(localhost:3306)/hrs?collation=utf8_unicode_ci&parseTime=true&loc=Asia%2FTaipei&multiStatements=true"
-	}
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
 
 	gdb, err := database.NewDatabase(dsn)
 	if err != nil {
@@ -64,9 +65,13 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	// Create an instance of our handler which satisfies the generated interface
-	hrSystem := api.NewHRSystem(gdb)
+	redisClient, err := cache.NewRedisClient(redisHost + ":" + redisPort)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	hrSystem := handler.NewHRSystem(gdb, redisClient)
 	s := NewServer(hrSystem, port)
-	// And we serve HTTP until the world ends.
+
 	log.Fatal(s.ListenAndServe())
 }

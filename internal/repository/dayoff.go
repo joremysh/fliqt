@@ -67,12 +67,14 @@ func (r *dayOffRepo) List(params *model.ListParams) ([]model.DayOffRecord, int64
 		return nil, 0, err
 	}
 
+	sortColumnMap := map[string]string{"startTime": "start_time"}
 	if params.SortBy != "" {
-		order := params.SortBy
-		if params.SortOrder == "desc" {
-			order += " DESC"
+		if order, ok := sortColumnMap[params.SortBy]; ok {
+			if params.SortOrder == "desc" {
+				order += " DESC"
+			}
+			query = query.Order(order)
 		}
-		query = query.Order(order)
 	} else {
 		// Default sorting by start time descending
 		query = query.Order("start_time DESC")

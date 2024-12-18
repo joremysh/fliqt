@@ -1,19 +1,21 @@
-package api
+package handler
 
 import (
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	openapi_types "github.com/oapi-codegen/runtime/types"
+	openapitypes "github.com/oapi-codegen/runtime/types"
 	"gorm.io/gorm"
 
+	"github.com/joremysh/fliqt/api"
 	"github.com/joremysh/fliqt/internal/model"
 	"github.com/joremysh/fliqt/internal/repository"
 	"github.com/joremysh/fliqt/internal/service"
+	"github.com/joremysh/fliqt/pkg/cache"
 )
 
-var _ ServerInterface = (*HRSystem)(nil)
+var _ api.ServerInterface = (*HRSystem)(nil)
 
 type HRSystem struct {
 	gdb             *gorm.DB
@@ -21,39 +23,39 @@ type HRSystem struct {
 	dayOffService   service.DayOffService
 }
 
-func NewHRSystem(gdb *gorm.DB) *HRSystem {
+func NewHRSystem(gdb *gorm.DB, redisClient *cache.RedisClient) *HRSystem {
 	employeeRepo := repository.NewEmployeeRepo(gdb)
 	dayOffRepo := repository.NewDayOffRepo(gdb)
 
 	return &HRSystem{
 		gdb:             gdb,
-		employeeService: service.NewEmployeeService(employeeRepo),
+		employeeService: service.NewEmployeeService(employeeRepo, redisClient),
 		dayOffService:   service.NewDayOffService(dayOffRepo, employeeRepo),
 	}
 }
 
 func (s *HRSystem) GetLiveness(c *gin.Context) {
-	c.JSON(http.StatusOK, Pong{
+	c.JSON(http.StatusOK, api.Pong{
 		StartTime: time.Now().Format(time.RFC3339),
 	})
 }
 
-func ConvertToEmployeeResponse(employee *model.Employee) *Employee {
-	return &Employee{
+func ConvertToEmployeeResponse(employee *model.Employee) *api.Employee {
+	return &api.Employee{
 		Address:     employee.Address,
-		Email:       openapi_types.Email(employee.Email),
+		Email:       openapitypes.Email(employee.Email),
 		Id:          int64(employee.ID),
 		Name:        employee.Name,
-		OnboardDate: openapi_types.Date{Time: employee.OnboardDate},
+		OnboardDate: openapitypes.Date{Time: employee.OnboardDate},
 		PhoneNumber: employee.PhoneNumber,
 		Salary:      employee.Salary,
-		Department:  EmployeeDepartment(employee.Department),
+		Department:  api.EmployeeDepartment(employee.Department),
 	}
 }
 
-func ConvertToDayOffResponse(record *model.DayOffRecord) *DayOffRecord {
-	return &DayOffRecord{
-		DayOffType: DayOffRecordDayOffType(record.DayOffType),
+func ConvertToDayOffResponse(record *model.DayOffRecord) *api.DayOffRecord {
+	return &api.DayOffRecord{
+		DayOffType: api.DayOffRecordDayOffType(record.DayOffType),
 		EmployeeID: int64(record.EmployeeID),
 		EndTime:    record.EndTime,
 		Reason:     record.Reason,
@@ -61,15 +63,15 @@ func ConvertToDayOffResponse(record *model.DayOffRecord) *DayOffRecord {
 	}
 }
 
-func (s *HRSystem) ListEmployees(c *gin.Context, params ListEmployeesParams) {
+func (s *HRSystem) ListEmployees(c *gin.Context, params api.ListEmployeesParams) {
 	result, err := s.employeeService.ListEmployees(c.Request.Context(), parseListParams(params))
 	if err != nil {
 		sendErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	resp := &ListEmployeesResponse{
-		Data:       make([]Employee, len(result.Data)),
+	resp := &api.ListEmployeesResponse{
+		Data:       make([]api.Employee, len(result.Data)),
 		Page:       result.Page,
 		PageSize:   result.PageSize,
 		TotalCount: result.TotalCount,
@@ -81,7 +83,7 @@ func (s *HRSystem) ListEmployees(c *gin.Context, params ListEmployeesParams) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func parseListParams(params ListEmployeesParams) *model.ListParams {
+func parseListParams(params api.ListEmployeesParams) *model.ListParams {
 	listParams := &model.ListParams{}
 	if params.PageSize != nil {
 		listParams.PageSize = *params.PageSize
@@ -102,17 +104,17 @@ func parseListParams(params ListEmployeesParams) *model.ListParams {
 }
 
 func sendErrorResponse(c *gin.Context, code int, errMsg string) {
-	c.JSON(code, Error{
+	c.JSON(code, api.Error{
 		Code:    int32(code),
 		Message: errMsg,
 	})
 }
 
 func (s *HRSystem) AddEmployee(c *gin.Context) {
-	var newEmployee NewEmployee
+	var newEmployee api.NewEmployee
 	err := c.Bind(&newEmployee)
 	if err != nil {
-		sendErrorResponse(c, http.StatusBadRequest, "Invalid format for NewEmployee")
+		sendErrorResponse(c, http.StatusBadRequest, "Invalid format for Employee")
 		return
 	}
 
@@ -134,10 +136,10 @@ func (s *HRSystem) AddEmployee(c *gin.Context) {
 }
 
 func (s *HRSystem) UpdateEmployee(c *gin.Context, id int64) {
-	var newEmployee NewEmployee
+	var newEmployee api.NewEmployee
 	err := c.Bind(&newEmployee)
 	if err != nil {
-		sendErrorResponse(c, http.StatusBadRequest, "Invalid format for NewEmployee")
+		sendErrorResponse(c, http.StatusBadRequest, "Invalid format for Employee")
 		return
 	}
 
@@ -181,10 +183,10 @@ func (s *HRSystem) FindEmployeeByID(c *gin.Context, id int64) {
 }
 
 func (s *HRSystem) SubmitDayOff(c *gin.Context, id int64) {
-	var dayOffRecord DayOffRecord
+	var dayOffRecord api.DayOffRecord
 	err := c.Bind(&dayOffRecord)
 	if err != nil {
-		sendErrorResponse(c, http.StatusBadRequest, "Invalid format for DayOffRecord")
+		sendErrorResponse(c, http.StatusBadRequest, "Invalid format for DayOff Record")
 		return
 	}
 
@@ -203,7 +205,7 @@ func (s *HRSystem) SubmitDayOff(c *gin.Context, id int64) {
 	c.JSON(http.StatusCreated, ConvertToDayOffResponse(created))
 }
 
-func (s *HRSystem) ListDayOffs(c *gin.Context, id int64, params ListDayOffsParams) {
+func (s *HRSystem) ListDayOffs(c *gin.Context, id int64, params api.ListDayOffsParams) {
 	listParams := &model.ListParams{}
 	if params.PageSize != nil {
 		listParams.PageSize = *params.PageSize
@@ -221,35 +223,36 @@ func (s *HRSystem) ListDayOffs(c *gin.Context, id int64, params ListDayOffsParam
 		listParams.Filters = *params.Filters
 	}
 
-	// result, err := s.employeeService.ListEmployees(c.Request.Context(), parseListParams(params))
-	// if err != nil {
-	// 	sendErrorResponse(c, http.StatusInternalServerError, err.Error())
-	// 	return
-	// }
-	//
-	// resp := &ListEmployeesResponse{
-	// 	Data:       make([]Employee, len(result.Data)),
-	// 	Page:       result.Page,
-	// 	PageSize:   result.PageSize,
-	// 	TotalCount: result.TotalCount,
-	// }
-	// for i, employee := range result.Data {
-	// 	converted := ConvertToEmployeeResponse(&employee)
-	// 	resp.Data[i] = *converted
-	// }
-	// c.JSON(http.StatusOK, resp)
+	result, err := s.dayOffService.ListDayOffs(c.Request.Context(), uint(id), listParams)
+	if err != nil {
+		sendErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-	// result,err:=s.dayOffService.ListDayOffs(c.Request.Context(), uint(id),listParams)
-	// if err != nil {
-	// 	sendErrorResponse(c, http.StatusInternalServerError, err.Error())
-	// 	return
-	// }
-
-	// TODO implement me
-	panic("implement me")
+	resp := &api.ListDayOffsResponse{
+		Data:       make([]api.DayOffRecord, len(result.Data)),
+		Page:       result.Page,
+		PageSize:   result.PageSize,
+		TotalCount: result.TotalCount,
+	}
+	for i, datum := range result.Data {
+		converted := ConvertToDayOffResponse(&datum)
+		resp.Data[i] = *converted
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 func (s *HRSystem) CancelDayOff(c *gin.Context, id int64) {
-	// TODO implement me
-	panic("implement me")
+	var request api.CancelDayOffJSONBody
+	err := c.Bind(&request)
+	if err != nil {
+		sendErrorResponse(c, http.StatusBadRequest, "Invalid format for Cancel Day Off")
+		return
+	}
+
+	if err = s.dayOffService.CancelDayOff(c.Request.Context(), uint(id), request.CancellationReason); err != nil {
+		sendErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, id)
 }
