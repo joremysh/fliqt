@@ -169,7 +169,7 @@ func (s *HRSystem) DeleteEmployee(c *gin.Context, id int64) {
 		return
 	}
 
-	c.JSON(http.StatusOK, id)
+	c.JSON(http.StatusNoContent, id)
 }
 
 func (s *HRSystem) FindEmployeeByID(c *gin.Context, id int64) {
@@ -254,5 +254,5 @@ func (s *HRSystem) CancelDayOff(c *gin.Context, id int64) {
 		sendErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, id)
+	c.JSON(http.StatusNoContent, id)
 }

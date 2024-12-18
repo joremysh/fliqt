@@ -4,7 +4,7 @@ info:
   title: HR Systems
   description: A series of APIs for HR Systems
 servers:
-  - url: http://localhost:8081
+  - url: http://localhost:8080
 paths:
   /liveness:
     get:
@@ -55,18 +55,18 @@ paths:
               type: string
           description: Key-value pairs for filtering records (e.g., filters[department]=Engineering&filters[name]=John)
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListEmployeesResponse'
+                $ref: "#/components/schemas/ListEmployeesResponse"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     post:
       summary: Creates a new employee
       description: Creates a new employee in the system. Duplicated names are allowed
@@ -77,20 +77,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewEmployee'
+              $ref: "#/components/schemas/NewEmployee"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Employee'
+                $ref: "#/components/schemas/Employee"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
   /employees/{id}:
     get:
       summary: Returns a employee by ID
@@ -106,18 +106,18 @@ paths:
             format: int64
             minimum: 1
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Employee'
+                $ref: "#/components/schemas/Employee"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     put:
       summary: Updates a employee
       description: Updates a new employee in the system.
@@ -137,20 +137,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewEmployee'
+              $ref: "#/components/schemas/NewEmployee"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Employee'
+                $ref: "#/components/schemas/Employee"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     delete:
       summary: Deletes a employee by ID
       description: deletes a single employee based on the ID supplied
@@ -164,14 +164,14 @@ paths:
             type: integer
             format: int64
       responses:
-        '204':
+        "204":
           description: deleted
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
   /employees/{id}/day-offs:
     post:
       summary: Submit a day off request
@@ -190,20 +190,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DayOffRecord'
+              $ref: "#/components/schemas/DayOffRecord"
       responses:
-        '201':
+        "201":
           description: Day off request submitted successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DayOffRecord'
+                $ref: "#/components/schemas/DayOffRecord"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
     get:
       summary: List day off records
@@ -262,18 +262,18 @@ paths:
               type: string
           description: Key-value pairs for filtering records (e.g., filters[dayOffType]=PTO)
       responses:
-        '200':
+        "200":
           description: List of day off records
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListDayOffsResponse'
+                $ref: "#/components/schemas/ListDayOffsResponse"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
   /employees/day-offs/{id}/cancel:
     post:
@@ -298,14 +298,14 @@ paths:
                 cancellationReason:
                   type: string
       responses:
-        '200':
+        "200":
           description: Day off request cancelled successfully
         default:
           description: unexpected error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -319,7 +319,7 @@ components:
 
     Employee:
       allOf:
-        - $ref: '#/components/schemas/NewEmployee'
+        - $ref: "#/components/schemas/NewEmployee"
         - required:
             - id
           properties:
@@ -413,7 +413,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Employee'
+            $ref: "#/components/schemas/Employee"
         totalCount:
           type: integer
           format: int64
@@ -439,7 +439,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/DayOffRecord'
+            $ref: "#/components/schemas/DayOffRecord"
         totalCount:
           type: integer
           format: int64
