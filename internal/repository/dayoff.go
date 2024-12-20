@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -57,9 +56,8 @@ func (r *dayOffRepo) List(params *model.ListParams) ([]model.DayOffRecord, int64
 	for _, field := range listFilterColumnNames {
 		if s, ok := params.Filters[field]; ok {
 			condition := listFilterColumnNames[field] + " like ?"
-			value := fmt.Sprintf("%s", s)
-			query = query.Where(condition, value)
-			countQuery = countQuery.Where(condition, value)
+			query = query.Where(condition, s)
+			countQuery = countQuery.Where(condition, s)
 		}
 	}
 

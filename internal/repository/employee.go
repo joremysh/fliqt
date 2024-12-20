@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 
 	"github.com/joremysh/fliqt/internal/model"
@@ -64,9 +62,8 @@ func (r *employeeRepo) List(params *model.ListParams) ([]model.Employee, int64, 
 	for _, field := range listFilterColumnNames {
 		if s, ok := params.Filters[field]; ok {
 			condition := field + " like ?"
-			value := fmt.Sprintf("%s", s)
-			query = query.Where(condition, value)
-			countQuery = countQuery.Where(condition, value)
+			query = query.Where(condition, s)
+			countQuery = countQuery.Where(condition, s)
 		}
 	}
 

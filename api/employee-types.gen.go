@@ -82,13 +82,15 @@ type Employee struct {
 	Email      openapi_types.Email `json:"email"`
 
 	// Id Unique id of the employee
-	Id int64 `json:"id"`
+	Id    int64  `json:"id"`
+	Level string `json:"level"`
 
 	// Name Name of the employee
 	Name        string             `json:"name"`
 	OnboardDate openapi_types.Date `json:"onboardDate"`
 	PhoneNumber string             `json:"phoneNumber"`
 	Salary      int                `json:"salary"`
+	Title       string             `json:"title"`
 }
 
 // EmployeeDepartment defines model for Employee.Department.
@@ -136,12 +138,14 @@ type NewEmployee struct {
 	Address    string                `json:"address"`
 	Department NewEmployeeDepartment `json:"department"`
 	Email      openapi_types.Email   `json:"email"`
+	Level      string                `json:"level"`
 
 	// Name Name of the employee
 	Name        string             `json:"name"`
 	OnboardDate openapi_types.Date `json:"onboardDate"`
 	PhoneNumber string             `json:"phoneNumber"`
 	Salary      int                `json:"salary"`
+	Title       string             `json:"title"`
 }
 
 // NewEmployeeDepartment defines model for NewEmployee.Department.

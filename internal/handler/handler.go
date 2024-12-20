@@ -50,6 +50,8 @@ func ConvertToEmployeeResponse(employee *model.Employee) *api.Employee {
 		PhoneNumber: employee.PhoneNumber,
 		Salary:      employee.Salary,
 		Department:  api.EmployeeDepartment(employee.Department),
+		Title:       employee.Title,
+		Level:       employee.Level,
 	}
 }
 
@@ -126,6 +128,8 @@ func (s *HRSystem) AddEmployee(c *gin.Context) {
 		Address:     newEmployee.Address,
 		Salary:      newEmployee.Salary,
 		OnboardDate: newEmployee.OnboardDate.Time,
+		Title:       newEmployee.Title,
+		Level:       newEmployee.Level,
 	})
 	if err != nil {
 		sendErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -151,6 +155,8 @@ func (s *HRSystem) UpdateEmployee(c *gin.Context, id int64) {
 		Address:     newEmployee.Address,
 		Salary:      newEmployee.Salary,
 		OnboardDate: newEmployee.OnboardDate.Time,
+		Title:       newEmployee.Title,
+		Level:       newEmployee.Level,
 	}
 	req.ID = uint(id)
 

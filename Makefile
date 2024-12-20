@@ -8,7 +8,8 @@ unit-test:
 	go test -v ./...
 
 lint:
-	golangci-lint run --timeout 60s
+	#golangci-lint run --timeout 60s
+	docker build --rm -t golangci-lint-check -f Dockerfile.lint .
 
 up:
 	docker-compose up -d

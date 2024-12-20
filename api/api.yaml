@@ -338,6 +338,8 @@ components:
         - salary
         - onboardDate
         - department
+        - title
+        - level
       properties:
         name:
           type: string
@@ -348,6 +350,10 @@ components:
         phoneNumber:
           type: string
         address:
+          type: string
+        title:
+          type: string
+        level:
           type: string
         salary:
           type: integer
