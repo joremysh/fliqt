@@ -51,7 +51,7 @@ func TestEmployeeRepo_Create(t *testing.T) {
 	require.NotNil(t, employee.ID)
 
 	check := &model.Employee{}
-	err = gdb.First(check, &model.Employee{Email: employee.Email}).Error
+	err = tx.First(check, &model.Employee{Email: employee.Email}).Error
 	require.NoError(t, err)
 	require.Equal(t, employee.Name, check.Name)
 	require.Equal(t, employee.PhoneNumber, check.PhoneNumber)

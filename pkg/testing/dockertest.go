@@ -46,7 +46,7 @@ func NewMysqlInDocker() (*dockertest.Pool, *dockertest.Resource, *gorm.DB, error
 	var db *sql.DB
 	var gdb *gorm.DB
 
-	dsn := fmt.Sprintf("root:secret@(localhost:%s)/mysql", resource.GetPort("3306/tcp")) + "?collation=utf8_unicode_ci&parseTime=true&loc=Asia%2FTaipei&multiStatements=true"
+	dsn := fmt.Sprintf("root:secret@(localhost:%s)/mysql", resource.GetPort("3306/tcp")) + "?collation=utf8_unicode_ci&parseTime=true&multiStatements=true"
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	err = pool.Retry(func() error {

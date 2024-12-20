@@ -7,8 +7,8 @@ services:
       - 8080:8080
     environment:
       - PORT=8080
-      - DSN=user:password@tcp(mysql:3306)/hrs?parseTime=true&multiStatements=true
-      - REDIS_HOST=redis
+      - DSN=user:password@tcp(fliqt-mysql:3306)/hrs?parseTime=true&multiStatements=true
+      - REDIS_HOST=fliqt-redis
       - REDIS_PORT=6379
     depends_on:
       mysql:
@@ -19,7 +19,7 @@ services:
       - go-network
 
   mysql:
-    container_name: mysql
+    container_name: fliqt-mysql
     image: mysql:9.0
     ports:
       - 3306:3306
@@ -38,7 +38,7 @@ services:
       timeout: 5s
       retries: 3
   cache:
-    container_name: redis
+    container_name: fliqt-redis
     image: redis:latest
     ports:
       - 6379:6379
