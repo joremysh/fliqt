@@ -25,14 +25,14 @@
     - Backend API: `http://localhost:8080`
 
 
-### API Documentation
+## API Documentation
 
 The API specification is defined using OpenAPI 3.0 and can be found in:
 ```
 api/api.yaml
 ```
 
-### Getting Started
+## Getting Started
 
 1. Install dependencies:
 ```bash
@@ -47,7 +47,7 @@ make generate
 ```
 This will update the request and response body structures based on your OpenAPI definitions.
 
-### Important Notes
+## Important Notes
 
 - Always run `make generate` after modifying the API specification
 - Commit both the API specification and generated code changes
