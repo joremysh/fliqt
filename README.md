@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/joremysh/fliqt)](https://goreportcard.com/report/github.com/joremysh/fliqt)
+
 # fliQt HR System
 
 ## Development Guide
